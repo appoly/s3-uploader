@@ -27,7 +27,7 @@
             "aliases": {
                 "S3Uploader": "Appoly\\S3Uploader\\Facades\\S3Uploader"
             }
-        },
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true
