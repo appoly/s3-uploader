@@ -160,9 +160,25 @@ The package registers these routes by default (can be customized via `routes.pre
 | `POST` | `/api/s3/multipart/complete` | `s3-uploader.complete` | Complete the upload |
 | `POST` | `/api/s3/multipart/abort` | `s3-uploader.abort` | Abort the upload |
 
-### 📥 Request Examples
+---
 
-**Initiate Upload**
+### POST `/api/s3/multipart/initiate`
+
+Start a new multipart upload session.
+
+**Headers:**
+| Header | Required | Value |
+|:-------|:---------|:------|
+| `Content-Type` | Yes | `application/json` |
+| `Accept` | Yes | `application/json` |
+
+**Request Body:**
+| Parameter | Type | Required | Description |
+|:----------|:-----|:---------|:------------|
+| `file_name` | string | Yes | Original filename (e.g., `video.mp4`) |
+| `content_type` | string | No | MIME type (default: `application/octet-stream`) |
+
+**Example Request:**
 ```json
 {
     "file_name": "video.mp4",
@@ -170,24 +186,122 @@ The package registers these routes by default (can be customized via `routes.pre
 }
 ```
 
-**Presign Part**
+**Example Response:**
 ```json
 {
-    "upload_id": "abc123",
-    "file_path": "uploads/multipart/xyz-video.mp4",
+    "upload_id": "abc123def456...",
+    "file_path": "uploads/multipart/550e8400-e29b-41d4-a716-446655440000-video.mp4"
+}
+```
+
+---
+
+### POST `/api/s3/multipart/presign-part`
+
+Get a presigned URL to upload a specific part directly to S3.
+
+**Headers:**
+| Header | Required | Value |
+|:-------|:---------|:------|
+| `Content-Type` | Yes | `application/json` |
+| `Accept` | Yes | `application/json` |
+
+**Request Body:**
+| Parameter | Type | Required | Description |
+|:----------|:-----|:---------|:------------|
+| `upload_id` | string | Yes | Upload ID from initiate response |
+| `file_path` | string | Yes | File path from initiate response |
+| `part_number` | integer | Yes | Part number (starts at 1) |
+
+**Example Request:**
+```json
+{
+    "upload_id": "abc123def456...",
+    "file_path": "uploads/multipart/550e8400-e29b-41d4-a716-446655440000-video.mp4",
     "part_number": 1
 }
 ```
 
-**Complete Upload**
+**Example Response:**
 ```json
 {
-    "upload_id": "abc123",
-    "file_path": "uploads/multipart/xyz-video.mp4",
+    "presigned_url": "https://bucket.s3.region.amazonaws.com/...",
+    "part_number": 1,
+    "headers": {}
+}
+```
+
+---
+
+### POST `/api/s3/multipart/complete`
+
+Complete the multipart upload after all parts have been uploaded to S3.
+
+**Headers:**
+| Header | Required | Value |
+|:-------|:---------|:------|
+| `Content-Type` | Yes | `application/json` |
+| `Accept` | Yes | `application/json` |
+
+**Request Body:**
+| Parameter | Type | Required | Description |
+|:----------|:-----|:---------|:------------|
+| `upload_id` | string | Yes | Upload ID from initiate response |
+| `file_path` | string | Yes | File path from initiate response |
+| `parts` | array | Yes | Array of uploaded parts |
+| `parts.*.part_number` | integer | Yes | Part number |
+| `parts.*.etag` | string | Yes | ETag returned by S3 after uploading the part |
+
+**Example Request:**
+```json
+{
+    "upload_id": "abc123def456...",
+    "file_path": "uploads/multipart/550e8400-e29b-41d4-a716-446655440000-video.mp4",
     "parts": [
-        { "part_number": 1, "etag": "\"abc123\"" },
-        { "part_number": 2, "etag": "\"def456\"" }
+        { "part_number": 1, "etag": "\"a54357aff0632cce46d942af68356b38\"" },
+        { "part_number": 2, "etag": "\"0c78aef83f66abc1fa1e8477f296d394\"" }
     ]
+}
+```
+
+**Example Response:**
+```json
+{
+    "file_path": "uploads/multipart/550e8400-e29b-41d4-a716-446655440000-video.mp4",
+    "location": "https://bucket.s3.region.amazonaws.com/uploads/multipart/550e8400-e29b-41d4-a716-446655440000-video.mp4"
+}
+```
+
+---
+
+### POST `/api/s3/multipart/abort`
+
+Abort an in-progress multipart upload and clean up any uploaded parts.
+
+**Headers:**
+| Header | Required | Value |
+|:-------|:---------|:------|
+| `Content-Type` | Yes | `application/json` |
+| `Accept` | Yes | `application/json` |
+
+**Request Body:**
+| Parameter | Type | Required | Description |
+|:----------|:-----|:---------|:------------|
+| `upload_id` | string | Yes | Upload ID from initiate response |
+| `file_path` | string | Yes | File path from initiate response |
+
+**Example Request:**
+```json
+{
+    "upload_id": "abc123def456...",
+    "file_path": "uploads/multipart/550e8400-e29b-41d4-a716-446655440000-video.mp4"
+}
+```
+
+**Example Response:**
+```json
+{
+    "success": true
 }
 ```
 
