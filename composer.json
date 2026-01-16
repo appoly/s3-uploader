@@ -1,0 +1,34 @@
+{
+    "name": "appoly/s3-uploader",
+    "description": "S3 multipart uploader for Laravel",
+    "keywords": ["s3", "upload", "laravel", "multipart", "aws", "appoly"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dobriyan Petkov",
+            "email": "dobriyan@appoly.co.uk"
+        }
+    ],
+    "require" : {
+        "php": "^8.2",
+        "aws/aws-sdk-php": "^3.0",
+        "illuminate/support": "^11.0|^12.0"       
+    },
+    "autoload": {
+        "psr-4": {
+            "Appoly\\S3Uploader\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Appoly\\S3Uploader\\S3UploaderServiceProvider"
+            ],
+            "aliases": {
+                "S3Uploader": "Appoly\\S3Uploader\\Facades\\S3Uploader"
+            }
+        },
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
